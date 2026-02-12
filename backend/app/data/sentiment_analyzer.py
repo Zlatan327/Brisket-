@@ -6,15 +6,20 @@ GenAI-powered sentiment analysis for team news, trade rumors, and coaching stabi
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 import re
+from ..services.tavily_service import TavilyService
+from ..services.gemini_service import GeminiService
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SentimentAnalyzer:
     """
-    Analyzes news sentiment for teams using keyword-based approach
-    (Can be upgraded to use transformers/GenAI models)
+    Analyzes news sentiment using Tavily (search) and Gemini (analysis).
+    Falls back to keyword-based approach if AI unavailable.
     """
     
-    # Sentiment keywords
+    # Sentiment keywords (fallback)
     POSITIVE_KEYWORDS = [
         'win', 'victory', 'success', 'dominant', 'impressive', 'strong',
         'confident', 'healthy', 'chemistry', 'momentum', 'playoff',
@@ -38,11 +43,13 @@ class SentimentAnalyzer:
     ]
     
     def __init__(self):
-        pass
+        """Initialize with AI services"""
+        self.tavily = TavilyService()
+        self.gemini = GeminiService()
     
     def analyze_text_sentiment(self, text: str) -> float:
         """
-        Analyze sentiment of text using keyword matching
+        Analyze sentiment of text using Gemini if available, else keywords
         
         Args:
             text: Text to analyze
@@ -50,6 +57,14 @@ class SentimentAnalyzer:
         Returns:
             Sentiment score (-1.0 to 1.0)
         """
+        # Try Gemini first
+        if self.gemini.model:
+            result = self.gemini.analyze_sentiment(text)
+            if result['analysis'] not in ['Gemini not configured', 'Analysis failed']:
+                if result['score'] != 0.0:
+                    return result['score']
+        
+        # Fallback to keyword matching
         text_lower = text.lower()
         
         # Count positive and negative keywords
@@ -205,36 +220,53 @@ class SentimentAnalyzer:
 
 # Mock news fetcher (would be replaced with actual API calls)
 class NewsFetcher:
-    """Fetches news articles for teams"""
+    """Fetches news articles for teams using Tavily"""
     
-    def fetch_team_news(self, team_name: str, days: int = 7) -> List[str]:
+    def __init__(self):
+        self.tavily = TavilyService()
+    
+    def fetch_team_news(self, team_name: str, days: int = 3) -> List[str]:
         """
-        Fetch recent news articles for a team
+        Fetch recent news articles for a team via Tavily API
         
         Args:
             team_name: Team name
-            days: Days to look back
+            days: Days to look back (used in query mainly)
             
         Returns:
             List of article texts
         """
-        # Placeholder - would integrate with ESPN, The Athletic, Reddit APIs
-        # For now, return mock articles
+        query = f"{team_name} basketball team news rumors injuries"
         
-        mock_articles = {
-            'Lakers': [
-                "Lakers win impressive victory over Celtics with dominant performance",
-                "LeBron James injury concerns as he sits out practice",
-                "Trade rumors swirl around Lakers roster ahead of deadline",
-            ],
-            'Celtics': [
-                "Celtics maintain strong chemistry despite recent loss",
-                "Jayson Tatum excellent in clutch situations this season",
-                "Boston looking healthy heading into playoff push",
-            ]
-        }
+        # Search Tavily
+        results = self.tavily.search_news(query, max_results=5)
         
-        return mock_articles.get(team_name, [])
+        articles = []
+        for res in results:
+            # Combine title and content snippet for analysis
+            text = f"{res.get('title', '')}. {res.get('content', '')}"
+            articles.append(text)
+            
+        # Fallback to mock if API returns nothing (e.g. key missing)
+        if not articles:
+             # Placeholder - would integrate with ESPN, The Athletic, Reddit APIs
+            # For now, return mock articles
+            
+            mock_articles = {
+                'Lakers': [
+                    "Lakers win impressive victory over Celtics with dominant performance",
+                    "LeBron James injury concerns as he sits out practice",
+                    "Trade rumors swirl around Lakers roster ahead of deadline",
+                ],
+                'Celtics': [
+                    "Celtics maintain strong chemistry despite recent loss",
+                    "Jayson Tatum excellent in clutch situations this season",
+                    "Boston looking healthy heading into playoff push",
+                ]
+            }
+            return mock_articles.get(team_name, [])
+            
+        return articles
 
 
 # Example usage

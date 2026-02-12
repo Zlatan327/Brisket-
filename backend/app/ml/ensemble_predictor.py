@@ -5,8 +5,8 @@ Combines DNN and XGBoost predictions for improved accuracy
 
 import numpy as np
 from typing import Dict, List, Tuple, Optional
-from dnn_model import DNNModel
-from xgboost_model import XGBoostModel
+from .dnn_model import DNNModel
+from .xgboost_model import XGBoostModel
 
 
 class EnsemblePredictor:

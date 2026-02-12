@@ -4,19 +4,17 @@ Database configuration and session management
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base
-import os
+from ..models.base import Base
+from .config import settings
 
-# Database URL - will be configured via environment variable
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/basketball_predictions")
+# Database URL from settings
+DATABASE_URL = settings.DATABASE_URL
 
 # Create engine
 engine = create_engine(
     DATABASE_URL,
-    echo=True,  # Set to False in production
-    pool_pre_ping=True,  # Verify connections before using
-    pool_size=10,
-    max_overflow=20
+    echo=True,
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 )
 
 # Create session factory

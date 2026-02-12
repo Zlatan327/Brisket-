@@ -6,8 +6,8 @@ Calculates all 37 features from raw game data
 import pandas as pd
 import numpy as np
 from typing import Dict, List
-from four_factors import FourFactorsCalculator
-from travel_fatigue import TravelFatigueCalculator
+from ..utils.four_factors import FourFactorsCalculator
+from ..utils.travel_fatigue import TravelFatigueCalculator
 
 
 class FeatureEngineer:

@@ -11,12 +11,12 @@ from datetime import datetime
 import numpy as np
 
 # Import our modules
-from ensemble_predictor import EnsemblePredictor
-from four_factors import FourFactorsCalculator
-from tanking_detector import TankingDetector
-from travel_fatigue import TravelFatigueCalculator
-from sentiment_analyzer import SentimentAnalyzer
-from shap_explainer import SHAPExplainer
+from .ml.ensemble_predictor import EnsemblePredictor
+from .utils.four_factors import FourFactorsCalculator
+from .utils.tanking_detector import TankingDetector
+from .utils.travel_fatigue import TravelFatigueCalculator
+from .data.sentiment_analyzer import SentimentAnalyzer
+from .ml.shap_explainer import SHAPExplainer
 
 # Initialize FastAPI app
 app = FastAPI(

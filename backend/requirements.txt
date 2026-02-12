@@ -9,6 +9,9 @@ python-multipart==0.0.6
 # Database
 sqlalchemy==2.0.25
 psycopg2-binary==2.9.9
+sqlalchemy>=2.0.40
+tavily-python>=0.3.0
+google-generativeai>=0.3.2
 alembic==1.13.1
 
 # NBA Data
