@@ -1,0 +1,43 @@
+name: Retrain Model Weekly
+
+on:
+  schedule:
+    # Run every Monday at 6 AM UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        
+    - name: Collect latest 2025-26 season data
+      run: |
+        cd backend
+        python collect_2025_26.py
+        
+    - name: Train improved model
+      run: |
+        cd backend
+        python train_improved.py
+        
+    - name: Commit updated model
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add backend/*.json backend/*.csv
+        git commit -m "Auto-retrain: Updated model with latest games" || echo "No changes to commit"
+        git push
