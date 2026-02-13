@@ -2,20 +2,20 @@
 # NBA + EuroLeague Basketball Prediction Tool
 
 # Core Framework
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
+# fastapi==0.109.0 (included in fastapi[all])
+uvicorn[standard]>=0.27.0
 python-multipart==0.0.6
 
 # Database
 sqlalchemy==2.0.25
-psycopg2-binary==2.9.9
-sqlalchemy>=2.0.40
+# psycopg2-binary==2.9.9
+# sqlalchemy>=2.0.40 (using 2.0.25)
 tavily-python>=0.3.0
 google-generativeai>=0.3.2
 alembic==1.13.1
 
 # NBA Data
-nba-api==1.4.1
+# nba_api>=1.4.1 (install manually --no-deps)
 
 # EuroLeague Data
 # Note: euroleaguer package - install from GitHub
@@ -27,25 +27,25 @@ wikipedia==1.4.0
 # Web Scraping
 beautifulsoup4==4.12.3
 requests==2.31.0
-lxml==5.1.0
+# lxml==5.1.0 (not needed, using html.parser)
 
 # Machine Learning
-scikit-learn==1.4.0
-xgboost==2.0.3
-tensorflow==2.15.0
+# scikit-learn==1.4.0 (installed 1.8.0)
+# xgboost==2.0.3 (installed 3.2.0)
+# tensorflow==2.15.0 (not supported on py3.14)
 # OR pytorch (choose one)
 # torch==2.1.2
 
 # ML Explainability
-shap==0.44.1
+# shap==0.44.1 (not supported on py3.14)
 
 # Data Processing
-pandas==2.2.0
-numpy==1.26.3
+# pandas==2.2.0 (installed 3.0.0)
+# numpy==1.26.3 (installed 2.4.2)
 
 # Sentiment Analysis (GenAI)
-transformers==4.37.2
-torch==2.1.2
+# transformers==4.37.2
+# torch==2.1.2
 
 # Background Jobs
 apscheduler==3.10.4
@@ -53,7 +53,7 @@ celery==5.3.6
 redis==5.0.1
 
 # Caching
-redis==5.0.1
+# redis==5.0.1 (duplicate)
 
 # Environment Variables
 python-dotenv==1.0.1
@@ -67,21 +67,21 @@ python-jose[cryptography]==3.3.0
 bcrypt==4.0.1
 
 # Validation
-pydantic==2.6.0
-pydantic-settings==2.1.0
+pydantic>=2.6.0
+pydantic-settings>=2.1.0
 
 # Testing
-pytest==8.0.0
-pytest-asyncio==0.23.4
-httpx==0.26.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.4
+httpx>=0.26.0
 
 # Code Quality
-black==24.1.1
-flake8==7.0.0
-mypy==1.8.0
+black>=24.1.1
+flake8>=7.0.0
+mypy>=1.8.0
 
 # Monitoring
 sentry-sdk==1.40.0
 
 # API Documentation
-fastapi[all]==0.109.0
+fastapi>=0.109.0
