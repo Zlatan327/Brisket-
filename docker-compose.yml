@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nba_prediction_api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the local directory to the container for development (optional, good for hot reload)
+      # - ./backend:/app
+      # Persist the SQLite database
+      - sqlite_data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///./nba_predictions.db
+      # Add other keys from .env here or use env_file
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:

@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+from pathlib import Path
+import os
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "NBA + EuroLeague Prediction API"
@@ -22,6 +24,9 @@ class Settings(BaseSettings):
     
     class Config:
         case_sensitive = True
-        env_file = ".env"
+        # Find .env file in backend root (3 levels up from this file)
+        base_path = Path(__file__).resolve().parent.parent.parent
+        env_file = os.path.join(base_path, ".env")
+        env_file_encoding = 'utf-8'
 
 settings = Settings()

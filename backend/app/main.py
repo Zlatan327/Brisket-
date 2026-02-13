@@ -9,6 +9,9 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict
 from datetime import datetime
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Import our modules
 from .ml.ensemble_predictor import EnsemblePredictor
@@ -17,12 +20,27 @@ from .utils.tanking_detector import TankingDetector
 from .utils.travel_fatigue import TravelFatigueCalculator
 from .data.sentiment_analyzer import SentimentAnalyzer
 from .ml.shap_explainer import SHAPExplainer
+from .services.prediction_service import PredictionService
+
+from contextlib import asynccontextmanager
+from app.services.scheduler import scheduler_service
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting up...")
+    scheduler_service.start()
+    yield
+    # Shutdown
+    logger.info("Shutting down...")
+    scheduler_service.shutdown()
 
 # Initialize FastAPI app
 app = FastAPI(
     title="NBA + EuroLeague Prediction API",
     description="AI-driven basketball game prediction with 87% target accuracy",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # CORS middleware
@@ -41,6 +59,7 @@ tanking_detector = TankingDetector()
 travel_calc = TravelFatigueCalculator()
 sentiment_analyzer = SentimentAnalyzer()
 shap_explainer = SHAPExplainer()
+prediction_service = PredictionService()
 
 
 # Pydantic models for request/response
@@ -141,6 +160,13 @@ class HealthResponse(BaseModel):
     models_loaded: bool
 
 
+class MatchupRequest(BaseModel):
+    """Request for a specific matchup prediction"""
+    home_team: str
+    away_team: str
+    game_date: str = datetime.now().strftime("%Y-%m-%d")
+
+
 # API Endpoints
 @app.get("/", response_model=Dict)
 async def root():
@@ -160,6 +186,23 @@ async def health_check():
         version="1.0.0",
         models_loaded=ensemble.is_trained
     )
+
+
+@app.post("/predict/matchup", response_model=Dict)
+async def predict_matchup(request: MatchupRequest):
+    """
+    Predict outcome for a specific matchup using real-time insights.
+    Fetches news, analyzes sentiment, builds features, and runs inference.
+    """
+    try:
+        result = await prediction_service.predict_matchup(
+            home_team=request.home_team,
+            away_team=request.away_team,
+            date=request.game_date
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Matchup prediction error: {str(e)}")
 
 
 @app.post("/predict", response_model=PredictionResponse)
@@ -227,6 +270,11 @@ async def predict_game(features: GameFeatures):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+
+
+# Include Routers
+from app.api import auth
+app.include_router(auth.router)
 
 
 @app.get("/teams/{league}", response_model=List[str])
