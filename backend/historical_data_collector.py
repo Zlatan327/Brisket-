@@ -10,6 +10,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import time
 import json
+import os
 from typing import Dict, List, Optional
 
 
@@ -60,38 +61,10 @@ class HistoricalDataCollector:
             print(f"Error fetching games for {season}: {e}")
             return pd.DataFrame()
     
-    def get_team_game_log(self, team_id: int, season: str) -> pd.DataFrame:
-        """
-        Get game log for a specific team
-        
-        Args:
-            team_id: NBA team ID
-            season: Season string
-            
-        Returns:
-            DataFrame with team game log
-        """
-        try:
-            gamelog = teamgamelog.TeamGameLog(
-                team_id=team_id,
-                season=season
-            )
-            
-            df = gamelog.get_data_frames()[0]
-            
-            # Rate limit
-            time.sleep(self.rate_limit_delay)
-            
-            return df
-            
-        except Exception as e:
-            print(f"Error fetching game log for team {team_id}: {e}")
-            return pd.DataFrame()
-    
     def collect_historical_games(
         self,
         start_season: str = "2020-21",
-        end_season: str = "2023-24"
+        end_season: str = "2024-25"
     ) -> pd.DataFrame:
         """
         Collect all historical games
@@ -234,8 +207,9 @@ class HistoricalDataCollector:
     
     def save_to_csv(self, df: pd.DataFrame, filepath: str):
         """Save DataFrame to CSV"""
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         df.to_csv(filepath, index=False)
-        print(f"\nData saved to {filepath}")
+        print(f"\\nData saved to {filepath}")
     
     def load_from_csv(self, filepath: str) -> pd.DataFrame:
         """Load DataFrame from CSV"""
@@ -251,29 +225,17 @@ if __name__ == "__main__":
     
     collector = HistoricalDataCollector()
     
-    # Collect games from 2023-24 season only (for testing)
-    print("\nCollecting 2023-24 season data...")
-    games_df = collector.get_games_by_season("2023-24")
+    # Collect full history
+    print("\\nStarting data collection (2020-2025)...")
+    games_df = collector.collect_historical_games()
     
     if not games_df.empty:
-        print(f"\nRaw data shape: {games_df.shape}")
-        print(f"Columns: {list(games_df.columns)[:10]}...")
-        
         # Process for backtesting
         processed_df = collector.process_games_for_backtesting(games_df)
         
-        print(f"\nProcessed data shape: {processed_df.shape}")
-        print(f"\nSample game:")
-        if len(processed_df) > 0:
-            sample = processed_df.iloc[0]
-            print(f"  {sample['away_team_name']} @ {sample['home_team_name']}")
-            print(f"  Score: {sample['away_score']} - {sample['home_score']}")
-            print(f"  Winner: {'Home' if sample['home_win'] == 1 else 'Away'}")
-            print(f"  Date: {sample['date']}")
+        # Save to backend/data
+        collector.save_to_csv(processed_df, "backend/data/raw_historical_games.csv")
         
-        # Save to CSV
-        collector.save_to_csv(processed_df, "historical_games_2023_24.csv")
-        
-        print("\n✓ Data collection successful!")
+        print("\\n✓ Data collection successful!")
     else:
-        print("\n✗ No data collected")
+        print("\\n✗ No data collected")
